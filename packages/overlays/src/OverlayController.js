@@ -72,7 +72,7 @@ export class OverlayController {
 
     this.manager.add(this);
 
-    if (config.placementMode === 'local' && config.contentNodeWrapper) {
+    if (config.contentNodeWrapper) {
       this._contentNodeWrapper = config.contentNodeWrapper;
     } else {
       this._contentNodeWrapper = document.createElement('div');
@@ -100,10 +100,19 @@ export class OverlayController {
    * If viewportConfig is configured, this will be OverlayManager.globalRootNode
    * If popperConfig is configured, this will be a sibling node of invokerNode
    */
-  get _renderTarget() {
+  get _renderContentNodeWrapperTarget() {
     if (this.placementMode === 'global') {
       return this.manager.globalRootNode;
     }
+    return this.__originalContentNodeWrapperParent;
+  }
+
+  /**
+   * @desc The element ._contentNodeWrapper will be appended to.
+   * If viewportConfig is configured, this will be OverlayManager.globalRootNode
+   * If popperConfig is configured, this will be a sibling node of invokerNode
+   */
+  get _renderTarget() {
     return this.__originalContentParent;
   }
 
@@ -137,9 +146,13 @@ export class OverlayController {
   updateConfig(cfgToAdd) {
     // Teardown all previous configs
     this._handleFeatures({ phase: 'teardown' });
+    if (cfgToAdd.contentNode && cfgToAdd.contentNode.isConnected) {
+      // We need to keep track of the original local context.
+      this.__originalContentParent = cfgToAdd.contentNode.parentNode;
+    }
     if (cfgToAdd.contentNodeWrapper && cfgToAdd.contentNodeWrapper.isConnected) {
       // We need to keep track of the original local context.
-      this.__originalContentParent = cfgToAdd.contentNodeWrapper.parentNode;
+      this.__originalContentNodeWrapperParent = cfgToAdd.contentNodeWrapper.parentNode;
     }
     this.__prevConfig = this.config || {};
 
@@ -202,11 +215,23 @@ export class OverlayController {
     // Now, add our node to the right place in dom (renderTarget)
     if (this._contentNodeWrapper !== this.__prevConfig._contentNodeWrapper) {
       if (!this.config.contentNodeWrapperInShadow || this.config.placementMode === 'global') {
+        this._contentNodeWrapper.innerHTML = '';
         this._contentNodeWrapper.appendChild(this.contentNode);
       }
     }
-    if (this._renderTarget && this._renderTarget !== this._contentNodeWrapper.parentNode) {
-      this._renderTarget.appendChild(this._contentNodeWrapper);
+    if (this.config.placementMode === 'local') {
+      if (this._renderTarget && this._renderTarget !== this.contentNode.parentElement) {
+        this._renderTarget.appendChild(this.contentNode);
+      }
+    }
+    if (
+      this._renderContentNodeWrapperTarget &&
+      this._renderContentNodeWrapperTarget !== this._contentNodeWrapper.parentNode
+    ) {
+      if (this.config.placementMode === 'local') {
+        this._contentNodeWrapper.innerHTML = '<slot name="content"></slot>';
+      }
+      this._renderContentNodeWrapperTarget.appendChild(this._contentNodeWrapper);
     }
   }
 
@@ -586,7 +611,7 @@ export class OverlayController {
   }
 
   _handleInheritsReferenceWidth() {
-    if (!this._referenceNode) {
+    if (!this._referenceNode || this.config.placementMode === 'global') {
       return;
     }
 
