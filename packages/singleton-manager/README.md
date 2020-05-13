@@ -1,4 +1,62 @@
-# Singleton Manager Rational
+# Singleton Manager
+
+A singleton manager provides a way to make sure a singleton instance loaded from multiple file locations stays a singleton.
+Primarily useful if two major version of a package with a singleton is used.
+
+## How to use
+
+### Installation
+
+```sh
+npm i --save singleton-manager
+```
+
+⚠️ You need to make SURE that only ONE version of `singleton-manager` is installed.
+
+```js
+import { singletonManager } from 'singleton-manager';
+```
+
+### Example
+
+Use the same singleton for both versions (as we don't use any of the breaking features)
+
+```js
+// managed-my-singleton.js
+import { singletonManager } from 'singleton-manager';
+import { mySingleton } from 'my-singleton'; // is available as 1.x and 2.x via node resolution
+
+singletonManager.set('my-singleton/index.js::1.x', mySingleton);
+singletonManager.set('my-singleton/index.js::2.x', mySingleton);
+```
+
+OR create a special compatible version of the singleton
+
+```js
+// managed-my-singleton.js
+import { singletonManager } from 'singleton-manager';
+import { MySingleton } from 'my-singleton'; // is available as 1.x and 2.x via node resolution
+
+class CompatibleSingleton extends MySingleton {
+  // add forward or backward compatibility code
+}
+const compatibleSingleton = new CompatibleSingleton();
+
+singletonManager.set('my-singleton/index.js::1.x', compatibleSingleton);
+singletonManager.set('my-singleton/index.js::2.x', compatibleSingleton);
+```
+
+AND in you App then you need to load the above code BEFORE loading the singleton or any feature using it.
+
+```js
+import './managed-my-singleton.js';
+
+import { mySingleton } from 'my-singleton'; // will no always be what is "defined" in managed-my-singleton.js
+```
+
+---
+
+## Singleton Manager Rational
 
 We have an app with 2 pages.
 
@@ -85,8 +143,8 @@ all that is left is a to "override" the default instance of the "users"
 import { singletonManager } from 'singleton-manager';
 
 const manager = new CompatibleManager();
-singletonManager.set('overlays::index.js::1.x', compatibleManager);
-singletonManager.set('overlays::index.js::2.x', compatibleManager);
+singletonManager.set('overlays/index.js::1.x', compatibleManager);
+singletonManager.set('overlays/index.js::2.x', compatibleManager);
 ```
 
 See it in action
@@ -120,8 +178,8 @@ console.log(typeof compatibleManager1.blockBody); // Boolean
 console.log(typeof compatibleManager1.blockBody); // Function
 
 // and override
-singletonManager.set('overlays::index.js::1.x', compatibleManager1);
-singletonManager.set('overlays::index.js::2.x', compatibleManager2);
+singletonManager.set('overlays/index.js::1.x', compatibleManager1);
+singletonManager.set('overlays/index.js::2.x', compatibleManager2);
 ```
 
 and they are "compatible" to each other because they sync the important data to each other.
@@ -147,19 +205,20 @@ You do this via a singletonManager and a "magic" string.
 - Reason be that you can target ranges of versions
 
 ```js
-singletonManager.set('overlays::index.js::1.x', compatibleManager1);
-singletonManager.set('overlays::index.js::2.x', compatibleManager2);
+singletonManager.set('overlays/index.js::1.x', compatibleManager1);
+singletonManager.set('overlays/index.js::2.x', compatibleManager2);
 ```
 
-### Details
+### Potential Improvements
 
 Potentially we could have "range", "exacts version" and symbol for unique filename.
 So you can override with increasing specificity.
+If you have a use case for that please open an issue.
 
 ## Non Goals
 
-Making sure that there are only 2 versions of a specific packages.
-npm is not meant to handle something like this... and it never will
+Making sure that there are only 2 mayor versions of a specific packages.
+npm is not meant to handle it - and it never will
 
 ```txt
 my-app
@@ -183,13 +242,12 @@ my-app
 my-app/node_modules/foo
 ```
 
-in there `feat-a` will grab the version of it's "parent" because of the node resolution system...
+in there `feat-a` will grab the version of it's "parent" because of the node resolution system.
+If however the versions do not match or there is no "common" folder to move it up to then it needs to be "duplicated" by npm/yarn.
 
-if however the versions do not match or there is no "common" folder to move it up to... then it needs to be "duplicated" by npm/yarn...
+Only by using a more controlled way like
 
-only by using a more controlled way like
+- [import-maps](https://github.com/WICG/import-maps)
+- [yarn resolutions](https://classic.yarnpkg.com/en/docs/selective-version-resolutions/)
 
-- import-maps
-- yarn resolve (not sure if npm has an equivalent)
-
-you can "hard" code it to the same versions
+you can "hard" code it to the same versions.
