@@ -1,7 +1,7 @@
 import { expect } from '@open-wc/testing';
 import sinon from 'sinon';
 
-import { ajax } from '../src/ajax.js';
+import { ajax } from '../ajax.js';
 
 describe('ajax', () => {
   let server;

@@ -11,13 +11,9 @@ Primarily useful if two major version of a package with a singleton is used.
 npm i --save singleton-manager
 ```
 
-⚠️ You need to make SURE that only ONE version of `singleton-manager` is installed.
+⚠️ You need to make SURE that only ONE version of `singleton-manager` is installed. For how see [Non Goals](#non-goals).
 
-```js
-import { singletonManager } from 'singleton-manager';
-```
-
-### Example
+### Example Singleton Users
 
 Use the same singleton for both versions (as we don't use any of the breaking features)
 
@@ -53,6 +49,54 @@ import './managed-my-singleton.js';
 
 import { mySingleton } from 'my-singleton'; // will no always be what is "defined" in managed-my-singleton.js
 ```
+
+### Warning
+
+Overriding version is an App level concern hence components of "features" are not allowed to use it.
+If you try to call multiple times for the same key then it will throw an error.
+
+```js
+// on app level
+singletonManager.set('my-singleton/index.js::1.x', compatibleSingleton);
+
+// somewhere in a dependency
+singletonManager.set('my-singleton/index.js::1.x', compatibleSingleton);
+
+// will throw an error that it is already defined
+```
+
+### Example Singleton Maintainers
+
+```js
+// my-singleton.js
+import { singletonManager } from 'singleton-manager';
+import { MySingleton } from './src/MySingleton.js';
+
+export const overlays =
+  singletonManager.get('my-singleton/my-singleton.js::1.x') || new MySingleton();
+```
+
+## Convention Singleton Key
+
+The key for a singleton needs to be "unique" for the package.
+Hence the following convention helps maintaining this.
+
+As a key use the `<package>::<unique-variable>::<semver-range>`.
+
+Examples Do:
+
+- `overlays::overlays::1.x` - instance created in index.js
+- `@scope/overlays::overlays::1.x` - with scope
+- `overlays::overlays::1.x` - version 1.x.x (> 1.0.0 you do 1.x, 2.x)
+- `overlays::overlays::2.x` - version 2.x.x (> 1.0.0 you do 1.x, 2.x)
+- `overlays::overlays::0.10.x` - version 0.10.x (< 1.0.0 you do 0.1.x, 0.2.x)
+
+Examples Don't:
+
+- `overlays` - too generic
+- `overlays::overlays` - you should include a version
+- `overlays::1.x` - you should include a package name & unique var
+- `./index.js::1.x` - it should start with a package name
 
 ---
 
@@ -143,8 +187,8 @@ all that is left is a to "override" the default instance of the "users"
 import { singletonManager } from 'singleton-manager';
 
 const manager = new CompatibleManager();
-singletonManager.set('overlays/index.js::1.x', compatibleManager);
-singletonManager.set('overlays/index.js::2.x', compatibleManager);
+singletonManager.set('overlays::overlays::1.x', compatibleManager);
+singletonManager.set('overlays::overlays::2.x', compatibleManager);
 ```
 
 See it in action
@@ -178,8 +222,8 @@ console.log(typeof compatibleManager1.blockBody); // Boolean
 console.log(typeof compatibleManager1.blockBody); // Function
 
 // and override
-singletonManager.set('overlays/index.js::1.x', compatibleManager1);
-singletonManager.set('overlays/index.js::2.x', compatibleManager2);
+singletonManager.set('overlays::overlays::1.x', compatibleManager1);
+singletonManager.set('overlays::overlays::2.x', compatibleManager2);
 ```
 
 and they are "compatible" to each other because they sync the important data to each other.
@@ -205,8 +249,8 @@ You do this via a singletonManager and a "magic" string.
 - Reason be that you can target ranges of versions
 
 ```js
-singletonManager.set('overlays/index.js::1.x', compatibleManager1);
-singletonManager.set('overlays/index.js::2.x', compatibleManager2);
+singletonManager.set('overlays::overlays::1.x', compatibleManager1);
+singletonManager.set('overlays::overlays::2.x', compatibleManager2);
 ```
 
 ### Potential Improvements

@@ -1,6 +1,6 @@
 import { OverlaysManager } from 'overlays';
 import { singletonManager } from '../../index.js';
-import { OverlaysManager as OverlaysManager2 } from './node_modules/page-b/node_modules/overlays/index.js';
+import { OverlaysManager as OverlaysManager2 } from './node_modules/page-b/node_modules/overlays/instance.js';
 
 let compatibleManager1;
 let compatibleManager2;
@@ -60,5 +60,5 @@ class CompatibleManager2 extends OverlaysManager2 {
 compatibleManager1 = new CompatibleManager1();
 compatibleManager2 = new CompatibleManager2();
 
-singletonManager.set('overlays/index.js::1.x', compatibleManager1);
-singletonManager.set('overlays/index.js::2.x', compatibleManager2);
+singletonManager.set('overlays::overlays::1.x', compatibleManager1);
+singletonManager.set('overlays::overlays::2.x', compatibleManager2);

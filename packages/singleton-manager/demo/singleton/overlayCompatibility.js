@@ -20,5 +20,5 @@ class CompatibleManager extends OverlaysManager {
 
 const compatibleManager = new CompatibleManager();
 
-singletonManager.set('overlays/index.js::1.x', compatibleManager);
-singletonManager.set('overlays/index.js::2.x', compatibleManager);
+singletonManager.set('overlays::overlays::1.x', compatibleManager);
+singletonManager.set('overlays::overlays::2.x', compatibleManager);
