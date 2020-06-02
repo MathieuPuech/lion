@@ -97,7 +97,10 @@ export const stylingContent = () => html`
   <style>
     ${demoStyle}
   </style>
-  <lion-dialog .config=${{ hidesOnOutsideClick: true, hidesOnEsc: true }}>
+  <lion-dialog
+    .config=${{ hidesOnOutsideClick: true, hidesOnEsc: true }}
+    style="--background-color: pink"
+  >
     <button slot="invoker">Styled dialog</button>
     <styled-dialog-content slot="content"></styled-dialog-content>
   </lion-dialog>

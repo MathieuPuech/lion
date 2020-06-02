@@ -5,7 +5,7 @@ class StyledDialogContent extends LitElement {
     return [
       css`
         :host {
-          background-color: #fff;
+          background-color: var(--background-color, #fff);
         }
         .nice {
           font-weight: bold;
