@@ -11,6 +11,9 @@ import demoStyle from './docs/demo-dialog-style.js';
 import './docs/styled-dialog-content.js';
 import './docs/slots-dialog-content.js';
 import './lion-dialog.js';
+import '@lion/select-rich/lion-select-rich.js';
+import '@lion/select-rich/lion-options.js';
+import '@lion/select-rich/lion-option.js';
 
 export default {
   title: 'Overlays/Dialog',
@@ -32,6 +35,13 @@ export const main = () => html`
       >
         ⨯
       </button>
+      <lion-select-rich name="favoriteColor" label="Favorite color">
+        <lion-options slot="input">
+          <lion-option .choiceValue=${'red'}>Red</lion-option>
+          <lion-option .choiceValue=${'hotpink'} checked>Hotpink</lion-option>
+          <lion-option .choiceValue=${'teal'}>Teal</lion-option>
+        </lion-options>
+      </lion-select-rich>
     </div>
   </lion-dialog>
 `;
